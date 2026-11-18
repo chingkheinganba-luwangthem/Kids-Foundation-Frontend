@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
+import { cn } from "@/lib/utils";
 import { SectionHeaderData, GalleryItemData, GalleryPageData } from "@/types/strapi";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 
@@ -44,7 +45,7 @@ export function GallerySection({
     headerData?.bottomLinkHref ||
     "#";
 
-  // Dynamic items: latest 6 uploads (sorted newest id first)
+  // Dynamic items: latest 5 uploads (sorted newest id first)
   const items = useMemo(() => {
     // 1. Authoritative: from Gallery Page Single Type
     if (galleryPageData?.images && galleryPageData.images.length > 0) {
@@ -53,7 +54,7 @@ export function GallerySection({
       );
 
       return sorted
-        .slice(0, 6)
+        .slice(0, 5)
         .map((item, idx) => ({
           id: `gallery-${item.id || idx}`,
           title: item.title,
@@ -68,7 +69,7 @@ export function GallerySection({
     // 2. Fallback: galleryData or GALLERY_ITEMS
     if (galleryData && galleryData.length > 0) {
       return galleryData
-        .slice(0, 6)
+        .slice(0, 5)
         .map((item) => ({
           id: `gallery-${item.id}`,
           title: item.title,
@@ -97,18 +98,22 @@ export function GallerySection({
         />
 
         {/* Uniform Gallery Grid – All Containers Identical in Size & aspect-[16/10] */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1fr_1.15fr_1fr] lg:grid-rows-[170px_170px] xl:grid-rows-[190px_190px] gap-5 sm:gap-6 max-w-[1050px] mx-auto">
           {items.map((item, index) => (
             <div
               key={item.id}
               onClick={() => setLightboxIndex(index)}
-              className="group relative aspect-[16/10] rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 bg-slate-900 cursor-pointer"
+              className={cn(
+                "group relative aspect-[4/3] lg:aspect-auto rounded-2xl overflow-hidden shadow-xs hover:shadow-xl transition-all duration-300 bg-slate-900 cursor-pointer",
+                index === 1 && "lg:col-start-2 lg:row-start-1 lg:row-span-2",
+                index === 4 && "lg:col-start-3 lg:row-start-2"
+              )}
             >
               <Image
                 src={item.image}
                 alt={item.imageAlt}
                 fill
-                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 350px"
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
               />
 

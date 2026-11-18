@@ -14,10 +14,10 @@ export function ExcellenceBanner({ data }: ExcellenceBannerProps) {
   return (
     <section
       aria-label={heading || "Excellence Banner"}
-      className="relative z-10 bg-gradient-to-r from-[#FAF7F2] via-[#FFF9ED] to-[#FAF7F2] border-y border-[#EFE5D5] py-7 sm:py-9 overflow-hidden"
+      className="relative z-10 bg-[#252D3F] bg-cover bg-center border-y border-white/10 py-7 sm:py-9 overflow-hidden"
+      style={{ backgroundImage: "url('/images/new_bgg.png')" }}
     >
-      {/* Subtle warm decorative background glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-24 bg-[#FBBF24]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute inset-0 bg-[#111827]/20 pointer-events-none" />
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 lg:px-[100px] relative z-10">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 text-center sm:text-left">
@@ -41,7 +41,7 @@ export function ExcellenceBanner({ data }: ExcellenceBannerProps) {
           {/* Headline & Subtitle */}
           <div className="space-y-1">
             {subtitle && (
-              <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[#D97706]">
+              <div className="flex items-center justify-center sm:justify-start gap-1.5 text-[#FBBF24]">
                 <Sparkles className="w-3.5 h-3.5" />
                 <span className="text-[11px] font-extrabold uppercase tracking-[0.2em]">
                   {subtitle}
@@ -50,13 +50,13 @@ export function ExcellenceBanner({ data }: ExcellenceBannerProps) {
             )}
 
             {heading && (
-              <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-extrabold text-[#17345F] tracking-tight leading-tight">
+              <h2 className="text-2xl sm:text-3xl lg:text-[32px] font-extrabold text-white tracking-tight leading-tight">
                 {heading}
               </h2>
             )}
 
             {description && (
-              <p className="text-xs sm:text-sm text-[#64748B] font-medium leading-relaxed max-w-xl">
+              <p className="text-xs sm:text-sm text-white/75 font-medium leading-relaxed max-w-xl">
                 {description}
               </p>
             )}

@@ -45,7 +45,7 @@ export default async function AboutPage() {
     founderName: strapiData?.founderName ?? "",
     founderRole: strapiData?.founderRole ?? "",
     institution: strapiData?.founderInstitution ?? "",
-    image: getStrapiMediaUrl(strapiData?.founderImage),
+    image: "/images/about_founder.png",
   };
 
   return (
@@ -132,7 +132,7 @@ export default async function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-start">
               
               {/* Left Column: Portrait Card & Identity */}
-              {founderMessage.image && <div className="lg:col-span-5 flex flex-col items-center text-center">
+              {founderMessage.image && <div className="hidden lg:col-span-5 lg:flex lg:flex-col lg:items-center lg:text-center">
                 <div className="relative w-full max-w-[320px] sm:max-w-[360px] aspect-[4/5] rounded-[26px] sm:rounded-[30px] overflow-hidden shadow-[0_16px_40px_rgba(23,52,95,0.1)] border border-slate-200/80 bg-gradient-to-b from-[#EEF4FB] via-[#E4EEF8] to-[#D5E3F2]">
                   <Image
                     src={founderMessage.image}

@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ACADEMIC_STAGES, ACADEMIC_STAGES_HEADER } from "@/data/academicStages";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { cn } from "@/lib/utils";
 import { SectionHeaderData, AcademicStageData, LearningPageData } from "@/types/strapi";
@@ -20,18 +19,25 @@ export function AcademicStages({
   learningPageData,
   stagesData,
 }: AcademicStagesProps) {
-  const headerLabel = headerData?.label || ACADEMIC_STAGES_HEADER.label;
-  const headerHeading = headerData?.heading || ACADEMIC_STAGES_HEADER.heading;
-  const headerDescription = headerData?.description || ACADEMIC_STAGES_HEADER.description;
+  const headerLabel = headerData?.label ?? "";
+  const headerHeading = headerData?.heading ?? "";
+  const headerDescription = headerData?.description ?? "";
 
   const stages = useMemo(() => {
     // 1. Authoritative: from Learning Page Single Type
     if (learningPageData?.stages && learningPageData.stages.length > 0) {
       return learningPageData.stages.map((s, idx) => {
-        const defaultData =
-          ACADEMIC_STAGES.find((d) => d.id === s.stageId) ||
-          ACADEMIC_STAGES[idx] ||
-          ACADEMIC_STAGES[0];
+        const defaultData = {
+          id: `stage-${idx}`,
+          image: "",
+          imageAlt: "",
+          linkText: "",
+          tabLabel: "",
+          subLabel: "",
+          heading: "",
+          description: "",
+          tags: [] as string[],
+        };
 
         const stageKey = s.stageId || defaultData.id;
 
@@ -66,7 +72,19 @@ export function AcademicStages({
     // 2. Fallback: stagesData or ACADEMIC_STAGES
     if (stagesData && stagesData.length > 0) {
       return stagesData.map((s, idx) => {
-        const defaultData = ACADEMIC_STAGES[idx] || ACADEMIC_STAGES[0];
+        const defaultData = {
+          id: `stage-${idx}`,
+          image: "",
+          imageAlt: "",
+          linkText: "",
+          linkHref: "#",
+          tabNumber: "",
+          tabLabel: "",
+          subLabel: "",
+          heading: "",
+          description: "",
+          tags: [] as string[],
+        };
         const cleanLinkText = s.cta?.label
           ? s.cta.label.replace(/[→\->]/g, "").trim()
           : (defaultData.linkText ? defaultData.linkText.replace(/[→\->]/g, "").trim() : "Explore Stage");
@@ -86,13 +104,12 @@ export function AcademicStages({
       });
     }
 
-    return ACADEMIC_STAGES.map((s) => ({
-      ...s,
-      linkText: s.linkText.replace(/[→\->]/g, "").trim(),
-    }));
+    return [];
   }, [learningPageData, stagesData]);
 
-  const [activeTabId, setActiveTabId] = useState<string>(stages[0]?.id || "foundational");
+  const [activeTabId, setActiveTabId] = useState<string>(stages[0]?.id || "");
+
+  if (stages.length === 0) return null;
 
   const currentStage =
     stages.find((s) => s.id === activeTabId) || stages[0];
@@ -135,7 +152,7 @@ export function AcademicStages({
                   <span>{stage.tabLabel}</span>
 
                   {isActive && (
-                    <span className="absolute -bottom-1 left-1 right-1 h-[2px] bg-[#F47C61] rounded-full animate-in fade-in" />
+                    <span className="absolute -bottom-2.5 left-2.5 right-2.5 h-[2px] bg-[#F47C61] rounded-full animate-in fade-in" />
                   )}
                 </button>
               );
@@ -185,30 +202,34 @@ export function AcademicStages({
               </div>
 
               {/* Explore Stage Link */}
-              <div className="pt-2">
-                <Link
-                  href={currentStage.linkHref}
-                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#F47C61] hover:text-[#d9664d] transition-colors group"
-                >
-                  <span>{currentStage.linkText}</span>
-                  <span className="transition-transform group-hover:translate-x-1">→</span>
-                </Link>
-              </div>
+              {currentStage.linkText && (
+                <div className="pt-2">
+                  <Link
+                    href={currentStage.linkHref}
+                    className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#F47C61] hover:text-[#d9664d] transition-colors group"
+                  >
+                    <span>{currentStage.linkText}</span>
+                    <span className="transition-transform group-hover:translate-x-1">→</span>
+                  </Link>
+                </div>
+              )}
             </div>
 
             {/* Right Column: Stage Image (5 cols) - Normal, balanced aspect ratio */}
-            <div className="lg:col-span-5 flex items-center justify-center lg:justify-end">
-              <div className="relative w-full max-w-[440px] aspect-[4/3] rounded-2xl sm:rounded-[28px] overflow-hidden shadow-[0_12px_36px_rgba(23,52,95,0.08)] bg-slate-100">
-                <Image
-                  src={currentStage.image}
-                  alt={currentStage.imageAlt}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 440px"
-                  className="object-cover object-center hover:scale-103 transition-transform duration-700 ease-out"
-                  priority
-                />
+            {currentStage.image && (
+              <div className="lg:col-span-5 flex items-center justify-center lg:justify-end">
+                <div className="relative w-full max-w-[440px] aspect-[4/3] rounded-2xl sm:rounded-[28px] overflow-hidden shadow-[0_12px_36px_rgba(23,52,95,0.08)] bg-slate-100">
+                  <Image
+                    src={currentStage.image}
+                    alt={currentStage.imageAlt}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 440px"
+                    className="object-cover object-center hover:scale-103 transition-transform duration-700 ease-out"
+                    priority
+                  />
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>

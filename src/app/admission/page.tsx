@@ -2,7 +2,6 @@ import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { PageBanner } from "@/components/ui/PageBanner";
-import { ADMISSION_PAGE_DATA } from "@/data/admissionPage";
 import { Download } from "lucide-react";
 import { getAdmissionPageData, getStrapiMediaUrl } from "@/lib/strapi";
 
@@ -16,76 +15,62 @@ export default async function AdmissionPage() {
   const strapiData = await getAdmissionPageData();
 
   const banner = {
-    title: strapiData?.bannerTitle || ADMISSION_PAGE_DATA.banner.title,
-    breadcrumb: strapiData?.breadcrumb || ADMISSION_PAGE_DATA.banner.breadcrumb,
+    title: strapiData?.bannerTitle ?? "",
+    breadcrumb: strapiData?.breadcrumb ?? [],
   };
 
   const enquiry = {
-    label: strapiData?.enquiry?.label || "ADMISSIONS",
-    heading: strapiData?.enquiry?.heading || ADMISSION_PAGE_DATA.enquiry.heading,
-    description: strapiData?.enquiry?.description || ADMISSION_PAGE_DATA.enquiry.description,
-    email: strapiData?.enquiry?.email || ADMISSION_PAGE_DATA.enquiry.email,
-    phone: strapiData?.enquiry?.phone || ADMISSION_PAGE_DATA.enquiry.phone,
-    downloadLabel: strapiData?.enquiry?.downloadLabel || ADMISSION_PAGE_DATA.enquiry.downloadLabel,
+    label: strapiData?.enquiry?.label ?? "",
+    heading: strapiData?.enquiry?.heading ?? "",
+    description: strapiData?.enquiry?.description ?? "",
+    email: strapiData?.enquiry?.email ?? "",
+    phone: strapiData?.enquiry?.phone ?? "",
+    downloadLabel: strapiData?.enquiry?.downloadLabel ?? "",
     downloadHref:
       getStrapiMediaUrl(strapiData?.enquiry?.admissionFormFile) ||
-      strapiData?.enquiry?.downloadHref ||
-      ADMISSION_PAGE_DATA.enquiry.downloadHref,
+      (strapiData?.enquiry?.downloadHref ?? ""),
   };
 
   const procedures = {
-    label: strapiData?.procedures?.label || "GUIDELINES",
-    heading: strapiData?.procedures?.heading || ADMISSION_PAGE_DATA.procedures.heading,
+    label: strapiData?.procedures?.label ?? "",
+    heading: strapiData?.procedures?.heading ?? "",
     registration: {
       title:
-        strapiData?.procedures?.registrationTitle ||
-        ADMISSION_PAGE_DATA.procedures.registration.title,
+        strapiData?.procedures?.registrationTitle ?? "",
       description:
-        strapiData?.procedures?.registrationDescription ||
-        ADMISSION_PAGE_DATA.procedures.registration.description,
+        strapiData?.procedures?.registrationDescription ?? "",
     },
     tests: {
       title:
-        strapiData?.procedures?.testsTitle ||
-        ADMISSION_PAGE_DATA.procedures.tests.title,
+        strapiData?.procedures?.testsTitle ?? "",
       description:
-        strapiData?.procedures?.testsDescription ||
-        ADMISSION_PAGE_DATA.procedures.tests.description,
+        strapiData?.procedures?.testsDescription ?? "",
     },
   };
 
   const feeStructure = {
-    label: strapiData?.feeStructure?.label || "FEE DETAILS",
-    heading: strapiData?.feeStructure?.heading || ADMISSION_PAGE_DATA.feeStructure.heading,
+    label: strapiData?.feeStructure?.label ?? "",
+    heading: strapiData?.feeStructure?.heading ?? "",
     tuitionFees: {
       title:
-        strapiData?.feeStructure?.tuitionFeesTitle ||
-        ADMISSION_PAGE_DATA.feeStructure.tuitionFees.title,
+        strapiData?.feeStructure?.tuitionFeesTitle ?? "",
       rows:
-        strapiData?.feeStructure?.tuitionFees &&
-        strapiData.feeStructure.tuitionFees.length > 0
-          ? strapiData.feeStructure.tuitionFees.map((row, idx) => ({
+        strapiData?.feeStructure?.tuitionFees?.map((row) => ({
               level: row.level,
-              description:
-                row.description ||
-                ADMISSION_PAGE_DATA.feeStructure.tuitionFees.rows[idx]?.description ||
-                "",
+              description: row.description ?? "",
               amount: row.amount,
             }))
-          : ADMISSION_PAGE_DATA.feeStructure.tuitionFees.rows,
+          ?? [],
     },
     admissionFees: {
       title:
-        strapiData?.feeStructure?.admissionFeesTitle ||
-        ADMISSION_PAGE_DATA.feeStructure.admissionFees.title,
+        strapiData?.feeStructure?.admissionFeesTitle ?? "",
       rows:
-        strapiData?.feeStructure?.admissionFees &&
-        strapiData.feeStructure.admissionFees.length > 0
-          ? strapiData.feeStructure.admissionFees.map((row) => ({
+        strapiData?.feeStructure?.admissionFees?.map((row) => ({
               level: row.level,
               amount: row.amount,
             }))
-          : ADMISSION_PAGE_DATA.feeStructure.admissionFees.rows,
+          ?? [],
     },
   };
 

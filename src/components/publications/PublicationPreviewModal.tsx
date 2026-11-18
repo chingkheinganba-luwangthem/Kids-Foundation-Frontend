@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { X, Calendar, BookOpen, Download, FileText, CheckCircle2, Award, Share2 } from "lucide-react";
-import { Publication } from "@/data/publicationsData";
+import { Publication } from "@/types";
 import { downloadPublicationFile } from "@/lib/publicationDownload";
 
 interface PublicationPreviewModalProps {
@@ -78,14 +78,14 @@ export function PublicationPreviewModal({ publication, onClose }: PublicationPre
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               title="Share Publication"
             >
               <Share2 className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+              className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer"
               aria-label="Close modal"
             >
               <X className="w-5 h-5" />
@@ -101,87 +101,95 @@ export function PublicationPreviewModal({ publication, onClose }: PublicationPre
               {publication.title}
             </h2>
             <div className="flex flex-wrap items-center gap-3 mt-3 text-xs sm:text-sm text-slate-500">
-              <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
-                <Calendar className="w-3.5 h-3.5 text-[#F47C61]" />
-                {publication.publishedDate}
-              </span>
-              <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
-                <FileText className="w-3.5 h-3.5 text-[#17345F]" />
-                {publication.pages} Pages
-              </span>
-              <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
-                {publication.fileSize} ({publication.format})
-              </span>
-              <span className="inline-flex items-center gap-1.5 font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-                <Award className="w-3.5 h-3.5" />
-                CBSE Affiliated Official
-              </span>
+              {publication.publishedDate && (
+                <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <Calendar className="w-3.5 h-3.5 text-[#F47C61]" />
+                  {publication.publishedDate}
+                </span>
+              )}
+              {publication.pages > 0 && (
+                <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                  <FileText className="w-3.5 h-3.5 text-[#17345F]" />
+                  {publication.pages} Pages
+                </span>
+              )}
+              {(publication.fileSize || publication.format) && (
+                <span className="inline-flex items-center gap-1.5 font-medium text-slate-700 bg-slate-100 px-2.5 py-1 rounded-full">
+                  {[publication.fileSize, publication.format ? `(${publication.format})` : ""].filter(Boolean).join(" ")}
+                </span>
+              )}
+
             </div>
           </div>
 
           {/* Editorial Note & Overview */}
-          <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-4 sm:p-5">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-[#17345F] mb-2 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-[#F47C61]" />
-              Executive Summary & Scope
-            </h3>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              {publication.description}
-            </p>
-            <div className="mt-3 pt-3 border-t border-slate-200/60 text-xs text-slate-500">
-              <strong className="text-slate-700">Editor / Published by:</strong> {publication.editorOrAuthor}
+          {publication.description && (
+            <div className="bg-slate-50/80 border border-slate-100 rounded-xl p-4 sm:p-5">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-[#17345F] mb-2 flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-[#F47C61]" />
+                Executive Summary & Scope
+              </h3>
+              <p className="text-sm text-slate-600 leading-relaxed">
+                {publication.description}
+              </p>
+              {publication.editorOrAuthor && (
+                <div className="mt-3 pt-3 border-t border-slate-200/60 text-xs text-slate-500">
+                  <strong className="text-slate-700">Editor / Published by:</strong> {publication.editorOrAuthor}
+                </div>
+              )}
             </div>
-          </div>
+          )}
 
           {/* Chapters & Contents */}
-          <div>
-            <h3 className="text-sm font-bold text-[#17345F] mb-3 uppercase tracking-wider text-xs">
-              Key Sections & Highlights
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {publication.highlights.map((highlight, index) => (
-                <div
-                  key={index}
-                  className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50/40 border border-amber-100/60 text-xs sm:text-sm text-slate-700 font-medium"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-[#F47C61] shrink-0 mt-0.5" />
-                  <span>{highlight}</span>
-                </div>
-              ))}
+          {publication.highlights && publication.highlights.length > 0 && (
+            <div>
+              <h3 className="text-sm font-bold text-[#17345F] mb-3 uppercase tracking-wider text-xs">
+                Key Sections & Highlights
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {publication.highlights.map((highlight, index) => (
+                  <div
+                    key={index}
+                    className="flex items-start gap-2.5 p-3 rounded-lg bg-amber-50/40 border border-amber-100/60 text-xs sm:text-sm text-slate-700 font-medium"
+                  >
+                    <CheckCircle2 className="w-4 h-4 text-[#F47C61] shrink-0 mt-0.5" />
+                    <span>{highlight}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Verification Box */}
-          <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-900">
-            <div>
-              <p className="font-semibold text-[#17345F]">
-                Kids&apos; Foundation School Official Document
-              </p>
-              <p className="text-slate-500 mt-0.5">
-                Affiliation No: 1230049 • Airport Road, Ghari, Imphal-West, Manipur
-              </p>
+          {publication.id && (
+            <div className="p-4 rounded-xl border border-blue-100 bg-blue-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-blue-900">
+              <div>
+                <p className="font-semibold text-[#17345F]">
+                  Official Publication Record
+                </p>
+              </div>
+              <div className="font-mono bg-white px-3 py-1.5 rounded-md border border-blue-200 text-blue-700 shrink-0 font-medium text-[11px]">
+                ID: {publication.id.toUpperCase()}
+              </div>
             </div>
-            <div className="font-mono bg-white px-3 py-1.5 rounded-md border border-blue-200 text-blue-700 shrink-0 font-medium text-[11px]">
-              ID: {publication.id.toUpperCase()}
-            </div>
-          </div>
+          )}
         </div>
 
         {/* Modal Footer with Actions */}
         <div className="bg-slate-50 border-t border-slate-100 px-5 sm:px-8 py-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <button
             onClick={onClose}
-            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-100 transition-colors order-2 sm:order-1"
+            className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 font-medium text-sm hover:bg-slate-100 transition-colors order-2 sm:order-1 cursor-pointer"
           >
             Close
           </button>
 
           <button
             onClick={handleDownload}
-            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#F47C61] hover:bg-[#e0684f] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all order-1 sm:order-2 active:scale-95"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-[#F47C61] hover:bg-[#e0684f] text-white font-semibold text-sm shadow-md hover:shadow-lg transition-all order-1 sm:order-2 active:scale-95 cursor-pointer"
           >
             <Download className="w-4 h-4" />
-            Download Publication ({publication.fileSize})
+            Download Publication {publication.fileSize && `(${publication.fileSize})`}
           </button>
         </div>
       </div>

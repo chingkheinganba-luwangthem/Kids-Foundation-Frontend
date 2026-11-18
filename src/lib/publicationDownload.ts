@@ -1,12 +1,14 @@
-import { Publication } from "@/data/publicationsData";
+import { Publication } from "@/types";
 
 export function downloadPublicationFile(pub: Publication) {
-  const fileUrl = pub.pdfUrl || `/documents/publications/${pub.downloadFileName}`;
+  const fileUrl = pub.pdfUrl || (pub.downloadFileName ? `/documents/publications/${pub.downloadFileName}` : "");
+  if (!fileUrl) return;
   const a = document.createElement("a");
   a.href = fileUrl;
-  a.download = pub.downloadFileName;
+  if (pub.downloadFileName) {
+    a.download = pub.downloadFileName;
+  }
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
 }
-

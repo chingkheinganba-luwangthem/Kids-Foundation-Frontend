@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
-import { NewsUpdateItem } from "@/data/newsUpdatesData";
+import { NewsUpdateItem } from "@/types";
 import { downloadNoticeDocument } from "@/lib/noticeDownload";
 import {
   Calendar,
@@ -13,15 +13,7 @@ import {
   FileText,
   Bell,
 } from "lucide-react";
-
-const DEFAULT_CATEGORIES = [
-  "All",
-  "Circulars & Notices",
-  "Academic & Exams",
-  "Admissions",
-  "Achievements",
-  "Events & Culture",
-];
+import { normalizeStringArray } from "@/lib/strapi";
 
 interface NewsClientProps {
   bannerTitle?: string;
@@ -34,18 +26,30 @@ interface NewsClientProps {
 }
 
 export function NewsClient({
-  bannerTitle = "News & Updates",
-  breadcrumb = ["News & Events", "News & Updates"],
-  bannerImage = "/images/pages_hero_background_image/news_hero.jpg",
-  sectionLabel = "Official Announcements & Institutional Circulars",
-  sectionHeading = "School Notices, Academic Bulletins & News",
-  categories = DEFAULT_CATEGORIES,
-  articles,
+  bannerTitle = "",
+  breadcrumb = [],
+  bannerImage,
+  sectionLabel = "",
+  sectionHeading = "",
+  categories = [],
+  articles = [],
 }: NewsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   // Set of expanded article IDs for in-place accordion expansion
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  const safeCategories = normalizeStringArray(categories);
+  const safeBreadcrumb = normalizeStringArray(breadcrumb);
+
+  const availableCategories = useMemo(() => {
+    if (safeCategories && safeCategories.length > 0) return safeCategories;
+    const cats = new Set<string>();
+    articles.forEach((a) => {
+      if (a.category) cats.add(a.category);
+    });
+    return ["All", ...Array.from(cats)];
+  }, [safeCategories, articles]);
 
   // Sort latest on top (descending timestamp)
   const sortedArticles = useMemo(() => {
@@ -98,65 +102,71 @@ export function NewsClient({
     <div className="relative flex-1 flex flex-col bg-slate-50 font-sans selection:bg-[#F47C61] selection:text-white">
       <main className="flex-1 flex flex-col">
         {/* Page Banner */}
-        <PageBanner
-          title={bannerTitle}
-          breadcrumb={breadcrumb}
-          image={bannerImage}
-        />
+        {(bannerTitle || bannerImage || safeBreadcrumb.length > 0) && (
+          <PageBanner
+            title={bannerTitle}
+            breadcrumb={safeBreadcrumb}
+            image={bannerImage}
+          />
+        )}
 
         <div className="max-w-[1400px] w-full mx-auto px-4 sm:px-6 md:px-8 lg:px-[100px] py-10 sm:py-16 space-y-8">
           
           {/* Header Introduction Bar */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-            <div className="space-y-1.5 max-w-2xl">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#D97706]">
-                <Bell className="w-4 h-4 text-[#F47C61]" />
-                {sectionLabel}
+          {(sectionLabel || sectionHeading) && (
+            <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+              <div className="space-y-1.5 max-w-2xl">
+                {sectionLabel && (
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#D97706]">
+                    <Bell className="w-4 h-4 text-[#F47C61]" />
+                    {sectionLabel}
+                  </div>
+                )}
+                {sectionHeading && (
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-[#17345F] tracking-tight">
+                    {sectionHeading}
+                  </h2>
+                )}
               </div>
-              <h2 className="text-xl sm:text-2xl font-extrabold text-[#17345F] tracking-tight">
-                {sectionHeading}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-                Stay updated with verified circulars, board examination schedules, admission
-                announcements, and student accolades. Download attached documents directly below.
-              </p>
-            </div>
 
-            <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0">
-              <button
-                onClick={expandAll}
-                className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors whitespace-nowrap"
-              >
-                Expand All
-              </button>
-              <button
-                onClick={collapseAll}
-                className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors whitespace-nowrap"
-              >
-                Collapse All
-              </button>
+              <div className="flex items-center gap-2 self-stretch md:self-auto shrink-0">
+                <button
+                  onClick={expandAll}
+                  className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors whitespace-nowrap"
+                >
+                  Expand All
+                </button>
+                <button
+                  onClick={collapseAll}
+                  className="flex-1 md:flex-initial px-3.5 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition-colors whitespace-nowrap"
+                >
+                  Collapse All
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Search & Category Filter Controls */}
           <div className="space-y-4">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               {/* Category Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-                      selectedCategory === cat
-                        ? "bg-[#17345F] text-white shadow-md shadow-[#17345F]/20"
-                        : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              {availableCategories.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+                  {availableCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+                        selectedCategory === cat
+                          ? "bg-[#17345F] text-white shadow-md shadow-[#17345F]/20"
+                          : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Search Bar */}
               <div className="relative min-w-[260px] sm:min-w-[320px]">

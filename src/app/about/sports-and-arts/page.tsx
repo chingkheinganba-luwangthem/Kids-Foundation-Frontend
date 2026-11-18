@@ -2,7 +2,6 @@ import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
-import { SPORTS_ARTS_DATA } from "@/data/sportsArtsData";
 import { getSportsArtsPageData, getStrapiMediaUrl } from "@/lib/strapi";
 
 export const metadata: Metadata = {
@@ -15,38 +14,30 @@ export default async function SportsAndArtsPage() {
   const strapiData = await getSportsArtsPageData();
 
   const banner = {
-    title: strapiData?.pageTitle || SPORTS_ARTS_DATA.banner.title,
-    breadcrumb: strapiData?.breadcrumb || SPORTS_ARTS_DATA.banner.breadcrumb,
+    title: strapiData?.pageTitle ?? "",
+    breadcrumb: strapiData?.breadcrumb ?? [],
   };
 
   const intro = {
-    label: strapiData?.introLabel || SPORTS_ARTS_DATA.intro.label,
-    title: strapiData?.introTitle || SPORTS_ARTS_DATA.intro.title,
-    lead: strapiData?.introLead || SPORTS_ARTS_DATA.intro.lead,
+    label: strapiData?.introLabel ?? "",
+    title: strapiData?.introTitle ?? "",
+    lead: strapiData?.introLead ?? "",
   };
 
   const activities =
-    strapiData?.activities && strapiData.activities.length > 0
-      ? strapiData.activities
-      : SPORTS_ARTS_DATA.activities;
+    strapiData?.activities ?? [];
 
   const facilitiesCallout =
-    strapiData?.facilitiesCallout && strapiData.facilitiesCallout.length > 0
-      ? strapiData.facilitiesCallout
-      : SPORTS_ARTS_DATA.facilitiesCallout;
+    strapiData?.facilitiesCallout ?? [];
 
   const gallery =
-    strapiData?.gallery && strapiData.gallery.length > 0
-      ? strapiData.gallery.map((g, idx) => ({
-          title: g.title || SPORTS_ARTS_DATA.gallery[idx]?.title || "Activity",
-          category: g.category || SPORTS_ARTS_DATA.gallery[idx]?.category || "Sports",
-          image:
-            getStrapiMediaUrl(g.image) ||
-            g.imageUrl ||
-            SPORTS_ARTS_DATA.gallery[idx]?.image ||
-            "/images/gallery-taekwondo.jpg",
-        }))
-      : SPORTS_ARTS_DATA.gallery;
+    strapiData?.gallery
+      ?.map((g) => ({
+        title: g.title ?? "",
+        category: g.category ?? "",
+        image: getStrapiMediaUrl(g.image) || g.imageUrl || "",
+      }))
+      .filter((item) => Boolean(item.image)) ?? [];
 
   return (
     <div className="relative flex-1 flex flex-col bg-white overflow-x-hidden selection:bg-[#F47C61] selection:text-white">

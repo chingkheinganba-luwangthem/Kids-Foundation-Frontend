@@ -3,7 +3,6 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { GALLERY_ITEMS, GALLERY_HEADER } from "@/data/gallery";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
 import { SectionHeaderData, GalleryItemData, GalleryPageData } from "@/types/strapi";
@@ -25,25 +24,25 @@ export function GallerySection({
   const headerLabel =
     galleryPageData?.sectionLabel ||
     headerData?.label ||
-    GALLERY_HEADER.label;
+    "";
 
   const headerHeading =
     galleryPageData?.sectionHeading ||
     headerData?.heading ||
-    GALLERY_HEADER.heading;
+    "";
 
   const headerDescription =
     galleryPageData?.sectionDescription ||
     headerData?.description ||
-    GALLERY_HEADER.description;
+    "";
 
   const bottomLinkText =
     headerData?.bottomLinkText ||
-    GALLERY_HEADER.bottomLinkText;
+    "";
 
   const bottomLinkHref =
     headerData?.bottomLinkHref ||
-    "/gallery";
+    "#";
 
   // Dynamic items: latest 6 uploads (sorted newest id first)
   const items = useMemo(() => {
@@ -53,31 +52,37 @@ export function GallerySection({
         (a, b) => (b.id ?? 0) - (a.id ?? 0)
       );
 
-      return sorted.slice(0, 6).map((item, idx) => ({
-        id: `gallery-${item.id || idx}`,
-        title: item.title,
-        category: item.category,
-        image:
-          item.imageUrl ||
-          getStrapiMediaUrl(item.image) ||
-          "/images/banner_images/banner.jpg",
-        imageAlt: item.alt || item.title,
-      }));
+      return sorted
+        .slice(0, 6)
+        .map((item, idx) => ({
+          id: `gallery-${item.id || idx}`,
+          title: item.title,
+          category: item.category,
+          image:
+            item.imageUrl || getStrapiMediaUrl(item.image) || "",
+          imageAlt: item.alt || item.title,
+        }))
+        .filter((item) => Boolean(item.image));
     }
 
     // 2. Fallback: galleryData or GALLERY_ITEMS
     if (galleryData && galleryData.length > 0) {
-      return galleryData.slice(0, 6).map((item) => ({
-        id: `gallery-${item.id}`,
-        title: item.title,
-        category: item.category,
-        image: getStrapiMediaUrl(item.image) || "/images/banner_images/banner.jpg",
-        imageAlt: item.image?.alternativeText || item.title,
-      }));
+      return galleryData
+        .slice(0, 6)
+        .map((item) => ({
+          id: `gallery-${item.id}`,
+          title: item.title,
+          category: item.category,
+          image: getStrapiMediaUrl(item.image) || "",
+          imageAlt: item.image?.alternativeText || item.title,
+        }))
+        .filter((item) => Boolean(item.image));
     }
 
-    return GALLERY_ITEMS.slice(0, 6);
+    return [];
   }, [galleryPageData, galleryData]);
+
+  if (items.length === 0) return null;
 
   return (
     <section id="gallery" className="py-12 sm:py-16 lg:py-20 relative bg-white">
@@ -124,14 +129,16 @@ export function GallerySection({
         </div>
 
         {/* View All Gallery CTA */}
-        <div className="mt-10 sm:mt-12 text-center">
-          <Link
-            href={bottomLinkHref}
-            className="inline-flex items-center text-[#F47C61] hover:text-[#E0684E] font-semibold text-sm transition-colors group"
-          >
-            <span>{bottomLinkText}</span>
-          </Link>
-        </div>
+        {bottomLinkText && (
+          <div className="mt-10 sm:mt-12 text-center">
+            <Link
+              href={bottomLinkHref}
+              className="inline-flex items-center text-[#F47C61] hover:text-[#E0684E] font-semibold text-sm transition-colors group"
+            >
+              <span>{bottomLinkText}</span>
+            </Link>
+          </div>
+        )}
       </div>
 
       {/* Lightbox Modal */}

@@ -5,8 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
   },
-  cacheComponents: true,
-  partialPrefetching: true,
+  // cacheComponents: true,
+  // partialPrefetching: true,
   reactCompiler: true,
   images: {
     dangerouslyAllowLocalIP: true,
@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
         protocol: "http",
         hostname: "127.0.0.1",
         port: "1337",
+        pathname: "/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "admin.kidsfoundationimphal.com",
         pathname: "/uploads/**",
       },
       {

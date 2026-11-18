@@ -3,7 +3,7 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
-import { Publication } from "@/data/publicationsData";
+import { Publication } from "@/types";
 import { downloadPublicationFile } from "@/lib/publicationDownload";
 import {
   Search,
@@ -12,14 +12,7 @@ import {
   Calendar,
   Eye,
 } from "lucide-react";
-
-const DEFAULT_CATEGORIES = [
-  "All",
-  "Magazine & Newsletter",
-  "Academic Handbook",
-  "Annual Report",
-  "Parent & Student Guide",
-];
+import { normalizeStringArray } from "@/lib/strapi";
 
 interface PublicationsClientProps {
   bannerTitle?: string;
@@ -32,14 +25,26 @@ interface PublicationsClientProps {
 }
 
 export function PublicationsClient({
-  bannerTitle = "Publications",
-  breadcrumb = ["News & Events", "Publications"],
-  bannerImage = "/images/pages_hero_background_image/news_hero.jpg",
-  categories = DEFAULT_CATEGORIES,
-  publications,
+  bannerTitle = "",
+  breadcrumb = [],
+  bannerImage,
+  categories = [],
+  publications = [],
 }: PublicationsClientProps) {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
+
+  const safeCategories = normalizeStringArray(categories);
+  const safeBreadcrumb = normalizeStringArray(breadcrumb);
+
+  const availableCategories = useMemo(() => {
+    if (safeCategories && safeCategories.length > 0) return safeCategories;
+    const cats = new Set<string>();
+    publications.forEach((p) => {
+      if (p.category) cats.add(p.category);
+    });
+    return ["All", ...Array.from(cats)];
+  }, [safeCategories, publications]);
 
   // Filtered publications
   const filteredPublications = useMemo(() => {
@@ -59,11 +64,13 @@ export function PublicationsClient({
     <div className="relative flex-1 flex flex-col bg-slate-50 font-sans">
       <main className="flex-1 flex flex-col">
         {/* Page Banner */}
-        <PageBanner
-          title={bannerTitle}
-          breadcrumb={breadcrumb}
-          image={bannerImage}
-        />
+        {(bannerTitle || bannerImage || safeBreadcrumb.length > 0) && (
+          <PageBanner
+            title={bannerTitle}
+            breadcrumb={safeBreadcrumb}
+            image={bannerImage}
+          />
+        )}
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 space-y-10 w-full">
 
@@ -71,21 +78,23 @@ export function PublicationsClient({
           <div className="space-y-4">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
               {/* Category Pills */}
-              <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
-                {categories.map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setSelectedCategory(cat)}
-                    className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
-                      selectedCategory === cat
-                        ? "bg-[#17345F] text-white shadow-md shadow-[#17345F]/20"
-                        : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
-                    }`}
-                  >
-                    {cat}
-                  </button>
-                ))}
-              </div>
+              {availableCategories.length > 1 && (
+                <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+                  {availableCategories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all ${
+                        selectedCategory === cat
+                          ? "bg-[#17345F] text-white shadow-md shadow-[#17345F]/20"
+                          : "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-slate-200"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Search Bar */}
               <div className="relative min-w-[260px] sm:min-w-[320px]">
@@ -143,7 +152,7 @@ export function PublicationsClient({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
               {filteredPublications.map((pub) => {
                 const pdfUrl =
-                  pub.pdfUrl || `/documents/publications/${pub.downloadFileName}`;
+                  pub.pdfUrl || (pub.downloadFileName ? `/documents/publications/${pub.downloadFileName}` : "");
 
                 return (
                   <div
@@ -151,21 +160,27 @@ export function PublicationsClient({
                     className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/80 overflow-hidden shadow-sm hover:shadow-xl hover:border-slate-300 transition-all duration-300 flex flex-col group"
                   >
                     {/* Book / Magazine Cover Visual */}
-                    <a
-                      href={pdfUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="relative w-full aspect-[16/10] bg-slate-100 overflow-hidden block cursor-pointer"
-                      title={`Read ${pub.title} in new tab`}
-                    >
-                      <Image
-                        src={pub.coverImage || "/images/news-cultural-meet.jpg"}
-                        alt={pub.title}
-                        fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-500"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      />
-                    </a>
+                    {pub.coverImage ? (
+                      <a
+                        href={pdfUrl || "#"}
+                        target={pdfUrl ? "_blank" : undefined}
+                        rel={pdfUrl ? "noopener noreferrer" : undefined}
+                        className="relative w-full aspect-[16/10] bg-slate-100 overflow-hidden block cursor-pointer"
+                        title={`Read ${pub.title}`}
+                      >
+                        <Image
+                          src={pub.coverImage}
+                          alt={pub.title}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-500"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        />
+                      </a>
+                    ) : (
+                      <div className="relative w-full aspect-[16/10] bg-[#17345F]/5 flex items-center justify-center">
+                        <BookOpen className="w-12 h-12 text-[#17345F]/30" />
+                      </div>
+                    )}
 
                     {/* Card Content */}
                     <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between space-y-4">
@@ -175,45 +190,59 @@ export function PublicationsClient({
                           <span className="text-[#17345F] font-semibold text-xs tracking-wide">
                             {pub.category}
                           </span>
-                          <span className="text-slate-400 text-xs">
-                            {pub.format} • {pub.fileSize}
-                          </span>
+                          {(pub.format || pub.fileSize) && (
+                            <span className="text-slate-400 text-xs">
+                              {[pub.format, pub.fileSize].filter(Boolean).join(" • ")}
+                            </span>
+                          )}
                         </div>
 
-                        {/* Heading - click opens PDF in new tab */}
-                        <a
-                          href={pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="block group/link"
-                        >
-                          <h3 className="text-base sm:text-lg font-bold text-[#17345F] group-hover/link:text-[#F47C61] transition-colors leading-snug line-clamp-2">
+                        {/* Heading */}
+                        {pdfUrl ? (
+                          <a
+                            href={pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block group/link"
+                          >
+                            <h3 className="text-base sm:text-lg font-bold text-[#17345F] group-hover/link:text-[#F47C61] transition-colors leading-snug line-clamp-2">
+                              {pub.title}
+                            </h3>
+                          </a>
+                        ) : (
+                          <h3 className="text-base sm:text-lg font-bold text-[#17345F] leading-snug line-clamp-2">
                             {pub.title}
                           </h3>
-                        </a>
+                        )}
 
                         {/* Published Date */}
-                        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                          <Calendar className="w-3.5 h-3.5 text-[#F47C61]" />
-                          <span>{pub.publishedDate}</span>
-                        </div>
+                        {pub.publishedDate && (
+                          <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                            <Calendar className="w-3.5 h-3.5 text-[#F47C61]" />
+                            <span>{pub.publishedDate}</span>
+                          </div>
+                        )}
                       </div>
 
                       {/* Action Buttons: Read (opens in new tab) and Download */}
                       <div className="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100">
-                        <a
-                          href={pdfUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 hover:border-slate-300 hover:text-[#17345F] transition-all active:scale-95 text-center"
-                        >
-                          <Eye className="w-3.5 h-3.5 text-[#17345F]" />
-                          Read
-                        </a>
+                        {pdfUrl ? (
+                          <a
+                            href={pdfUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-slate-200 text-slate-700 font-semibold text-xs hover:bg-slate-50 hover:border-slate-300 hover:text-[#17345F] transition-all active:scale-95 text-center"
+                          >
+                            <Eye className="w-3.5 h-3.5 text-[#17345F]" />
+                            Read
+                          </a>
+                        ) : (
+                          <span />
+                        )}
 
                         <button
                           onClick={() => downloadPublicationFile(pub)}
-                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#F47C61] text-white font-semibold text-xs hover:bg-[#e0684f] shadow-sm hover:shadow transition-all active:scale-95"
+                          className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#F47C61] text-white font-semibold text-xs hover:bg-[#e0684f] shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
                         >
                           <Download className="w-3.5 h-3.5" />
                           Download

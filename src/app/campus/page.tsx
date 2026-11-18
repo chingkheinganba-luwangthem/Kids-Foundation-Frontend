@@ -1,6 +1,5 @@
 import React from "react";
 import type { Metadata } from "next";
-import { CAMPUS_PAGE_DATA } from "@/data/campusPage";
 import { getCampusPageData, getStrapiMediaUrl } from "@/lib/strapi";
 import { CampusClient } from "@/components/campus/CampusClient";
 
@@ -14,40 +13,29 @@ export default async function CampusPage() {
   const strapiData = await getCampusPageData();
 
   const banner = {
-    title: strapiData?.pageTitle || CAMPUS_PAGE_DATA.banner.title,
-    breadcrumb: strapiData?.breadcrumb || CAMPUS_PAGE_DATA.banner.breadcrumb,
+    title: strapiData?.pageTitle ?? "",
+    breadcrumb: strapiData?.breadcrumb ?? [],
   };
 
   const intro = {
-    heading: strapiData?.introHeading || CAMPUS_PAGE_DATA.intro.heading,
-    title: strapiData?.introTitle || "Our campus at a glance",
-    description: strapiData?.introDescription || CAMPUS_PAGE_DATA.intro.description,
-    facilities:
-      strapiData?.facilities && strapiData.facilities.length > 0
-        ? strapiData.facilities
-        : CAMPUS_PAGE_DATA.intro.facilities,
+    heading: strapiData?.introHeading ?? "",
+    title: strapiData?.introTitle ?? "",
+    description: strapiData?.introDescription ?? "",
+    facilities: strapiData?.facilities ?? [],
   };
 
   const galleryImages =
-    strapiData?.galleryImages && strapiData.galleryImages.length > 0
-      ? strapiData.galleryImages.map((img, idx) => ({
-          src:
-            getStrapiMediaUrl(img.image) ||
-            img.imageUrl ||
-            CAMPUS_PAGE_DATA.galleryImages[idx]?.src ||
-            "/images/campus-aerial.jpg",
-          alt:
-            img.alt ||
-            img.title ||
-            CAMPUS_PAGE_DATA.galleryImages[idx]?.alt ||
-            "Campus image",
-        }))
-      : CAMPUS_PAGE_DATA.galleryImages;
+    strapiData?.galleryImages
+      ?.map((img) => ({
+        src: getStrapiMediaUrl(img.image) || img.imageUrl || "",
+        alt: img.alt || img.title || "",
+      }))
+      .filter((image) => Boolean(image.src)) ?? [];
 
   const video = {
-    title: strapiData?.videoTitle || CAMPUS_PAGE_DATA.video.title,
-    youtubeId: strapiData?.youtubeId || CAMPUS_PAGE_DATA.video.youtubeId,
-    description: strapiData?.videoDescription || CAMPUS_PAGE_DATA.video.description,
+    title: strapiData?.videoTitle ?? "",
+    youtubeId: strapiData?.youtubeId ?? "",
+    description: strapiData?.videoDescription ?? "",
   };
 
   return (

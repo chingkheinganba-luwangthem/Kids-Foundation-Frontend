@@ -1,12 +1,16 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { SITE_CONFIG } from "@/data/siteConfig";
 import { BackToTopButton } from "@/components/ui/BackToTopButton";
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
-import { getHeaderData, getFooterData, getHomePageData } from "@/lib/strapi";
+import {
+  getHeaderData,
+  getFooterData,
+  getHomePageData,
+  getGlobalSettings,
+} from "@/lib/strapi";
 
 const jakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -17,30 +21,16 @@ const jakartaSans = Plus_Jakarta_Sans({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://kidsfoundation.edu.in"),
-  title: SITE_CONFIG.fullTitle,
-  description: SITE_CONFIG.metaDescription,
-  keywords: [
-    "Kids Foundation",
-    "Kids Foundation Imphal",
-    "School in Imphal",
-    "Best school in Manipur",
-    "CBSE school Imphal",
-    "Kids Foundation Ghari",
-  ],
+  title: "Kids' Foundation | Imphal, Manipur",
+  description:
+    "Kids' Foundation School, Imphal - A premier senior secondary co-educational CBSE institution.",
   authors: [{ name: "Kids' Foundation" }],
   openGraph: {
-    title: SITE_CONFIG.fullTitle,
-    description: SITE_CONFIG.metaDescription,
+    title: "Kids' Foundation | Imphal, Manipur",
+    description:
+      "Kids' Foundation School, Imphal - A premier senior secondary co-educational CBSE institution.",
     url: "https://kidsfoundation.edu.in",
     siteName: "Kids' Foundation",
-    images: [
-      {
-        url: "/images/campus-aerial.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Kids' Foundation Campus, Imphal",
-      },
-    ],
     locale: "en_US",
     type: "website",
   },
@@ -59,21 +49,23 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const [headerData, footerData, homeData] = await Promise.all([
+  const [headerData, footerData, homeData, globalData] = await Promise.all([
     getHeaderData(),
     getFooterData(),
     getHomePageData(),
+    getGlobalSettings(),
   ]);
 
   return (
     <html lang="en" className={`${jakartaSans.variable} scroll-smooth`} suppressHydrationWarning>
       <body className="min-h-screen flex flex-col antialiased text-[#17345F]" suppressHydrationWarning>
-        <Header headerData={headerData} />
+        <Header headerData={headerData} globalData={globalData} />
         <div className="flex-1 flex flex-col">
           {children}
         </div>
         <Footer
           footerData={footerData}
+          globalData={globalData}
           admissionsData={homeData?.admissionsCta}
         />
         <BackToTopButton />
@@ -81,4 +73,3 @@ export default async function RootLayout({
     </html>
   );
 }
-

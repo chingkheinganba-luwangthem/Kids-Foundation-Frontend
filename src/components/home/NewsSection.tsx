@@ -1,15 +1,12 @@
 "use client";
 
 import React, { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import Image from "next/image";
 import Link from "next/link";
-import { NEWS_ITEMS, NEWS_HEADER } from "@/data/news";
-import { IMAGES } from "@/data/images";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { NewsCard } from "@/components/ui/NewsCard";
 import { cn } from "@/lib/utils";
 import { SectionHeaderData, NewsArticleData, NewsPageData, EventsPageData } from "@/types/strapi";
-import { getStrapiMediaUrl } from "@/lib/strapi";
+import { getStrapiMediaUrl, getSafeImageUrl } from "@/lib/strapi";
 import { formatAndSortNewsArticles, formatDisplayDate } from "@/lib/newsHelper";
 import { NewsItem } from "@/types";
 
@@ -162,11 +159,11 @@ export function NewsSection({
   const [activeTab, setActiveTab] = useState<"events" | "news">("events");
   const newsScrollRef = useRef<HTMLDivElement>(null);
 
-  const headerLabel = headerData?.label || NEWS_HEADER.label;
-  const headerHeading = headerData?.heading || NEWS_HEADER.heading;
-  const headerDescription = headerData?.description || NEWS_HEADER.description;
+  const headerLabel = headerData?.label ?? "";
+  const headerHeading = headerData?.heading ?? "";
+  const headerDescription = headerData?.description ?? "";
 
-  // 1. Dynamic Events: Latest 4 uploads from eventsPageData (or fallback)
+  // 1. Dynamic Events: Latest 4 uploads from eventsPageData
   const eventItems = useMemo<NewsItem[]>(() => {
     if (eventsPageData?.events && eventsPageData.events.length > 0) {
       // Upcoming events first, latest upload (newest id first) on top of all
@@ -188,12 +185,12 @@ export function NewsSection({
         title: ev.title,
         description: ev.description || "",
         category: "events",
-        image: ev.imageUrl || getStrapiMediaUrl(ev.image) || "/images/banner_images/banner.jpg",
+        image: getSafeImageUrl(getStrapiMediaUrl(ev.image) || ev.imageUrl, "/images/campus-aerial.jpg"),
         imageAlt: ev.title,
         linkHref: "/events",
       }));
     }
-    return NEWS_ITEMS.filter((i) => i.category === "events").slice(0, 4);
+    return [];
   }, [eventsPageData]);
 
   const [currentTimestamp, setCurrentTimestamp] = useState<number | undefined>(undefined);
@@ -218,7 +215,6 @@ export function NewsSection({
       }));
     }
 
-    // Fallback to articlesData or NEWS_ITEMS
     if (articlesData && articlesData.length > 0) {
       return articlesData.slice(0, 10).map((a) => ({
         id: a.slug || `article-${a.id}`,
@@ -230,28 +226,11 @@ export function NewsSection({
       }));
     }
 
-    return NEWS_ITEMS.filter((i) => i.category === "news").slice(0, 10).map((i) => ({
-      id: i.id,
-      date: i.date,
-      title: i.title,
-      isLatest: false,
-      category: "News",
-      linkHref: "/news",
-    }));
+    return [];
   }, [newsPageData, articlesData, currentTimestamp]);
 
   return (
     <section id="news" className="py-12 sm:py-16 lg:py-20 bg-[#FAF7F2] relative overflow-hidden">
-      {/* Subtle organic wave texture in background */}
-      <div className="absolute inset-0 pointer-events-none opacity-30 -z-0">
-        <Image
-          src={IMAGES.subtleWaveBg}
-          alt="Decorative subtle wave texture"
-          fill
-          className="object-cover object-right"
-        />
-      </div>
-
       <div className="relative z-10 max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 lg:px-[100px]">
         {/* Header */}
         <SectionHeading
@@ -269,7 +248,10 @@ export function NewsSection({
             aria-label="News and Events Tabs"
             className="inline-flex items-center gap-2 sm:gap-5 bg-[#E8EFF8] px-3.5 sm:px-6 py-2 rounded-full border border-[#D5E2F3]"
           >
-            {NEWS_HEADER.tabs.map((tab) => {
+            {[
+              { id: "events", number: "01.", label: "Events" },
+              { id: "news", number: "02.", label: "News & Updates" },
+            ].map((tab) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
@@ -288,7 +270,7 @@ export function NewsSection({
                   <span>{tab.label}</span>
 
                   {isActive && (
-                    <span className="absolute -bottom-1 left-1 right-1 h-[2px] bg-[#F47C61] rounded-full animate-in fade-in" />
+                    <span className="absolute -bottom-2.5 left-2.5 right-2.5 h-[2px] bg-[#F47C61] rounded-full animate-in fade-in" />
                   )}
                 </button>
               );

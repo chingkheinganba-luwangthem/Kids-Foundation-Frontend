@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   X,
   Send,
-  GraduationCap,
   Sparkles,
   Phone,
   User,
@@ -13,13 +12,6 @@ import {
   ArrowRight,
   BookOpen,
 } from "lucide-react";
-
-const DEFAULT_STAGES = [
-  "Foundational",
-  "Preparatory",
-  "Middle School",
-  "Secondary",
-];
 
 interface FloatingEnquireTabProps {
   stages?: string[];
@@ -30,7 +22,6 @@ export function FloatingEnquireTab({ stages }: FloatingEnquireTabProps) {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [strapiStages, setStrapiStages] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     studentName: "",
     parentPhone: "",
@@ -38,32 +29,7 @@ export function FloatingEnquireTab({ stages }: FloatingEnquireTabProps) {
     message: "",
   });
 
-  // Client-side fallback to fetch live stages from Strapi if not provided via props
-  useEffect(() => {
-    if (!stages || stages.length === 0) {
-      const strapiUrl = process.env.NEXT_PUBLIC_STRAPI_API_URL || "http://localhost:1337";
-      fetch(`${strapiUrl}/api/learning-page?populate[stages]=true`)
-        .then((res) => res.json())
-        .then((json) => {
-          if (json?.data?.stages && Array.isArray(json.data.stages)) {
-            const list = json.data.stages
-              .map((s: { title?: string }) => s.title?.trim())
-              .filter((t?: string): t is string => Boolean(t));
-            if (list.length > 0) {
-              setStrapiStages(list);
-            }
-          }
-        })
-        .catch(() => {});
-    }
-  }, [stages]);
-
-  const stageOptions =
-    stages && stages.length > 0
-      ? stages
-      : strapiStages.length > 0
-      ? strapiStages
-      : DEFAULT_STAGES;
+  const stageOptions = stages ?? [];
 
   // Handle escape key to close drawer
   useEffect(() => {
@@ -130,26 +96,14 @@ export function FloatingEnquireTab({ stages }: FloatingEnquireTabProps) {
             setSubmitted(false);
             setErrorMessage("");
           }}
-          className="group relative flex flex-col items-center justify-center bg-gradient-to-b from-[#F47C61] via-[#eb684a] to-[#d95538] text-white py-4 sm:py-5 px-2.5 sm:px-3 rounded-l-2xl shadow-[-6px_4px_24px_rgba(244,124,97,0.45)] hover:shadow-[-8px_6px_28px_rgba(244,124,97,0.6)] border-y border-l border-white/30 transition-all duration-300 hover:-translate-x-1.5 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-[#FBBF24] focus:ring-offset-2"
+          className="relative flex flex-col items-center justify-center bg-gradient-to-b from-[#F47C61] via-[#eb684a] to-[#d95538] text-white py-4 sm:py-5 px-2.5 sm:px-3 rounded-l-2xl shadow-[-6px_4px_24px_rgba(244,124,97,0.45)] hover:shadow-[-8px_6px_28px_rgba(244,124,97,0.6)] transition-all duration-300 hover:-translate-x-1.5 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-white/80 focus:ring-offset-2"
           aria-label="Open admission enquiry form"
           title="Admission Enquiry"
         >
-          {/* Subtle pulsating beacon dot */}
-          <span className="relative flex h-2.5 w-2.5 mb-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FBBF24] opacity-80" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#FBBF24]" />
-          </span>
-
-          {/* Graduation Cap Icon */}
-          <GraduationCap className="w-4 h-4 text-white mb-2 transition-transform duration-300 group-hover:scale-110" />
-
           {/* Vertical Text */}
           <span className="[writing-mode:vertical-rl] text-[12px] sm:text-[13px] font-extrabold uppercase tracking-widest text-white drop-shadow-sm select-none py-1">
             ENQUIRE NOW
           </span>
-
-          {/* Golden accent bar on the outer left edge */}
-          <span className="absolute left-0 top-3 bottom-3 w-[3px] bg-[#FBBF24] rounded-r-full opacity-70 group-hover:opacity-100 transition-opacity" />
         </button>
       </aside>
 
@@ -175,7 +129,7 @@ export function FloatingEnquireTab({ stages }: FloatingEnquireTabProps) {
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold tracking-tight text-white leading-tight">
-                    Quick Admission Enquiry
+                    Quick Enquiry
                   </h3>
                 </div>
 

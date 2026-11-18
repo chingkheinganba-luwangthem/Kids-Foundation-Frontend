@@ -2,7 +2,6 @@ import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
-import { ABOUT_PAGE_DATA } from "@/data/aboutPage";
 import { GraduationCap } from "lucide-react";
 import { getAboutPageData, getStrapiMediaUrl } from "@/lib/strapi";
 
@@ -16,48 +15,37 @@ export default async function AboutPage() {
   const strapiData = await getAboutPageData();
 
   const banner = {
-    title: strapiData?.pageTitle || ABOUT_PAGE_DATA.banner.title,
-    breadcrumb: strapiData?.breadcrumb || ABOUT_PAGE_DATA.banner.breadcrumb,
+    title: strapiData?.pageTitle ?? "",
+    breadcrumb: strapiData?.breadcrumb ?? [],
   };
 
   const story = {
-    label: strapiData?.storyLabel || ABOUT_PAGE_DATA.story.label,
-    heading: strapiData?.storyHeading || ABOUT_PAGE_DATA.story.heading,
-    topParagraphs:
-      strapiData?.storyTopParagraphs && strapiData.storyTopParagraphs.length > 0
-        ? strapiData.storyTopParagraphs
-        : ABOUT_PAGE_DATA.story.topParagraphs,
-    image: getStrapiMediaUrl(strapiData?.storyImage) || ABOUT_PAGE_DATA.story.image,
-    imageAlt: strapiData?.storyImageAlt || ABOUT_PAGE_DATA.story.imageAlt,
-    bottomParagraphs:
-      strapiData?.storyBottomParagraphs && strapiData.storyBottomParagraphs.length > 0
-        ? strapiData.storyBottomParagraphs
-        : ABOUT_PAGE_DATA.story.bottomParagraphs,
+    label: strapiData?.storyLabel ?? "",
+    heading: strapiData?.storyHeading ?? "",
+    topParagraphs: strapiData?.storyTopParagraphs ?? [],
+    image: getStrapiMediaUrl(strapiData?.storyImage),
+    imageAlt: strapiData?.storyImageAlt ?? "",
+    bottomParagraphs: strapiData?.storyBottomParagraphs ?? [],
   };
 
   const pillars =
-    strapiData?.pillars && strapiData.pillars.length > 0
-      ? strapiData.pillars.map((p, idx) => ({
-          id: p.keyId || ABOUT_PAGE_DATA.pillars[idx]?.id || `pillar-${idx}`,
+    strapiData?.pillars?.map((p, idx) => ({
+          id: p.keyId || `pillar-${idx}`,
           title: p.title,
           description: p.description || "",
-        }))
-      : ABOUT_PAGE_DATA.pillars;
+        })) ?? [];
 
   const founderMessage = {
-    tag: strapiData?.founderTag || ABOUT_PAGE_DATA.founderMessage.tag,
-    heading: strapiData?.founderHeading || ABOUT_PAGE_DATA.founderMessage.heading,
-    welcome: strapiData?.founderWelcome || ABOUT_PAGE_DATA.founderMessage.welcome,
-    paragraphs:
-      strapiData?.founderParagraphs && strapiData.founderParagraphs.length > 0
-        ? strapiData.founderParagraphs
-        : ABOUT_PAGE_DATA.founderMessage.paragraphs,
-    quote: strapiData?.founderQuote || ABOUT_PAGE_DATA.founderMessage.quote,
-    closing: strapiData?.founderClosing || ABOUT_PAGE_DATA.founderMessage.closing,
-    founderName: strapiData?.founderName || ABOUT_PAGE_DATA.founderMessage.founderName,
-    founderRole: strapiData?.founderRole || ABOUT_PAGE_DATA.founderMessage.founderRole,
-    institution: strapiData?.founderInstitution || ABOUT_PAGE_DATA.founderMessage.institution,
-    image: getStrapiMediaUrl(strapiData?.founderImage) || ABOUT_PAGE_DATA.founderMessage.image,
+    tag: strapiData?.founderTag ?? "",
+    heading: strapiData?.founderHeading ?? "",
+    welcome: strapiData?.founderWelcome ?? "",
+    paragraphs: strapiData?.founderParagraphs ?? [],
+    quote: strapiData?.founderQuote ?? "",
+    closing: strapiData?.founderClosing ?? "",
+    founderName: strapiData?.founderName ?? "",
+    founderRole: strapiData?.founderRole ?? "",
+    institution: strapiData?.founderInstitution ?? "",
+    image: getStrapiMediaUrl(strapiData?.founderImage),
   };
 
   return (
@@ -90,7 +78,7 @@ export default async function AboutPage() {
               </div>
 
               {/* Campus Image Right Column */}
-              <div className="lg:col-span-5 flex justify-center lg:justify-end">
+              {story.image && <div className="lg:col-span-5 flex justify-center lg:justify-end">
                 <div className="relative w-full aspect-[4/3] sm:aspect-[16/10] lg:aspect-auto lg:h-[300px] xl:h-[320px] rounded-2xl sm:rounded-3xl overflow-hidden shadow-[0_16px_40px_rgba(23,52,95,0.08)] bg-slate-100">
                   <Image
                     src={story.image}
@@ -102,7 +90,7 @@ export default async function AboutPage() {
                     priority
                   />
                 </div>
-              </div>
+              </div>}
             </div>
 
             {/* Bottom Row: Remaining Paragraphs */}
@@ -144,7 +132,7 @@ export default async function AboutPage() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 xl:gap-16 items-start">
               
               {/* Left Column: Portrait Card & Identity */}
-              <div className="lg:col-span-5 flex flex-col items-center text-center">
+              {founderMessage.image && <div className="lg:col-span-5 flex flex-col items-center text-center">
                 <div className="relative w-full max-w-[320px] sm:max-w-[360px] aspect-[4/5] rounded-[26px] sm:rounded-[30px] overflow-hidden shadow-[0_16px_40px_rgba(23,52,95,0.1)] border border-slate-200/80 bg-gradient-to-b from-[#EEF4FB] via-[#E4EEF8] to-[#D5E3F2]">
                   <Image
                     src={founderMessage.image}
@@ -167,7 +155,7 @@ export default async function AboutPage() {
                     {founderMessage.institution}
                   </p>
                 </div>
-              </div>
+              </div>}
 
               {/* Right Column: Founder's Message Text */}
               <div className="lg:col-span-7 flex flex-col justify-start">

@@ -5,6 +5,7 @@ import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
 import { Clock, MapPin, Tag, ArrowRight } from "lucide-react";
 import { EventReaderModal } from "@/components/events/EventReaderModal";
+import { normalizeStringArray, getSafeImageUrl } from "@/lib/strapi";
 
 export interface EventItem {
   id: string;
@@ -42,11 +43,11 @@ function EventCard({
     <div className="group bg-white rounded-2xl overflow-hidden shadow-[0_4px_16px_rgba(23,52,95,0.06)] border border-slate-100 hover:shadow-[0_12px_32px_rgba(23,52,95,0.12)] hover:-translate-y-1 transition-all duration-300 flex flex-col">
       <div
         onClick={() => onReadEvent(event)}
-        className="relative h-[220px] overflow-hidden flex-shrink-0 cursor-pointer"
+        className="relative h-[220px] overflow-hidden flex-shrink-0 cursor-pointer bg-slate-100"
       >
         <Image
-          src={event.image}
-          alt={event.imageAlt}
+          src={getSafeImageUrl(event.image, "/images/campus-aerial.jpg")}
+          alt={event.imageAlt || event.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           style={{ objectFit: "cover", objectPosition: "center" }}
@@ -122,25 +123,22 @@ function EventCard({
 }
 
 export function EventsClient({
-  bannerTitle = "Events",
-  breadcrumb = ["Events"],
-  sectionLabel = "ALL EVENTS",
-  sectionHeading = "What's happening at Kids' Foundation",
-  filterOptions = [
-    "All",
-    "Upcoming",
-    "Past",
-    "School Events",
-    "Academic",
-    "Sports",
-    "Cultural",
-    "Community",
-    "Ceremony",
-  ],
+  bannerTitle = "",
+  breadcrumb = [],
+  sectionLabel = "",
+  sectionHeading = "",
+  filterOptions = [],
   events,
 }: EventsClientProps) {
   const [activeFilter, setActiveFilter] = useState("All");
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
+
+  const safeBreadcrumb = normalizeStringArray(breadcrumb);
+  const normalizedFilters = normalizeStringArray(filterOptions);
+  const finalFilterOptions =
+    normalizedFilters.length > 0
+      ? (normalizedFilters.includes("All") ? normalizedFilters : ["All", ...normalizedFilters])
+      : ["All", "Upcoming", "Past"];
 
   const filtered = events.filter((e) => {
     if (activeFilter === "All") return true;
@@ -152,7 +150,7 @@ export function EventsClient({
   return (
     <div className="relative flex-1 flex flex-col overflow-x-hidden selection:bg-[#F47C61] selection:text-white">
       <main className="flex-1 flex flex-col">
-        <PageBanner title={bannerTitle} breadcrumb={breadcrumb} />
+        <PageBanner title={bannerTitle} breadcrumb={safeBreadcrumb} />
 
         {/* All Events Grid */}
         <section className="py-12 sm:py-16 lg:py-20 bg-[#FAF7F2]">
@@ -170,7 +168,7 @@ export function EventsClient({
 
             {/* Filter Pills */}
             <div className="flex flex-wrap gap-2 mb-10">
-              {filterOptions.map((cat) => (
+              {finalFilterOptions.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setActiveFilter(cat)}

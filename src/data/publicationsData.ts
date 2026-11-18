@@ -7,7 +7,7 @@ export interface Publication {
   academicYear: string;
   pages: number;
   fileSize: string;
-  format: "PDF";
+  format: string;
   language: string;
   description: string;
   highlights: string[];

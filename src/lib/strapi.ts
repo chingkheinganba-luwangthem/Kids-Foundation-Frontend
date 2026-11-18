@@ -20,7 +20,82 @@ import {
   ContactPageData,
 } from "@/types/strapi";
 
-const STRAPI_URL = process.env.NEXT_PUBLIC_STRAPI_API_URL || "http://localhost:1337";
+const RAW_STRAPI_URL =
+  process.env.NEXT_PUBLIC_STRAPI_API_URL || "https://admin.kidsfoundationimphal.com";
+const STRAPI_URL = RAW_STRAPI_URL.replace(/\/api\/?$/, "").replace(/\/+$/, "");
+
+/**
+ * Validates whether an image URL is a valid, renderable path/URL for Next.js <Image />.
+ * Returns false for arbitrary dummy text or malformed strings.
+ */
+export function isValidImageUrl(url?: string | null): boolean {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim();
+  if (!trimmed) return false;
+  // Next.js public absolute path
+  if (trimmed.startsWith("/") && !trimmed.startsWith("//") && !trimmed.includes(" ")) {
+    return true;
+  }
+  // External or absolute URL
+  if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("//")) {
+    try {
+      const parsed = new URL(trimmed.startsWith("//") ? `https:${trimmed}` : trimmed);
+      return Boolean(parsed.hostname);
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
+/**
+ * Returns a guaranteed valid image URL, falling back to a safe default if invalid.
+ */
+export function getSafeImageUrl(
+  url?: string | null,
+  fallback: string = "/images/campus-aerial.jpg"
+): string {
+  if (isValidImageUrl(url)) {
+    return (url as string).trim();
+  }
+  return fallback;
+}
+
+/**
+ * Safely parses and normalizes array-like fields from Strapi (such as JSON fields,
+ * comma-separated strings, or array of strings/objects).
+ */
+export function normalizeStringArray(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) {
+    return value
+      .map((item) =>
+        typeof item === "string"
+          ? item.trim()
+          : String(item?.name || item?.label || item?.title || item || "").trim()
+      )
+      .filter(Boolean);
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+          return parsed.map((item) => String(item ?? "").trim()).filter(Boolean);
+        }
+      } catch {
+        // Fall back to splitting
+      }
+    }
+    return trimmed
+      .split(/[\r\n,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+  }
+  return [];
+}
 
 /**
  * Returns full URL for a Strapi API path
@@ -35,10 +110,16 @@ export function getStrapiURL(path: string = ""): string {
 export function getStrapiMediaUrl(media?: any): string {
   if (!media) return "";
   if (typeof media === "string") {
-    if (media.startsWith("http://") || media.startsWith("https://") || media.startsWith("//")) {
-      return media;
+    const trimmed = media.trim();
+    if (!trimmed) return "";
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("//")) {
+      return trimmed;
     }
-    return `${STRAPI_URL}${media.startsWith("/") ? media : `/${media}`}`;
+    // Only prepend STRAPI_URL if it is a relative path or valid filename
+    if (trimmed.startsWith("/") || (trimmed.includes(".") && !trimmed.includes(" "))) {
+      return `${STRAPI_URL}${trimmed.startsWith("/") ? trimmed : `/${trimmed}`}`;
+    }
+    return "";
   }
 
   // Handle arrays if multiple files returned
@@ -52,11 +133,15 @@ export function getStrapiMediaUrl(media?: any): string {
     target.attributes?.url ||
     "";
 
-  if (!url) return "";
-  if (url.startsWith("http://") || url.startsWith("https://") || url.startsWith("//")) {
-    return url;
+  if (!url || typeof url !== "string") return "";
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.startsWith("http://") || trimmedUrl.startsWith("https://") || trimmedUrl.startsWith("//")) {
+    return trimmedUrl;
   }
-  return `${STRAPI_URL}${url.startsWith("/") ? url : `/${url}`}`;
+  if (trimmedUrl.startsWith("/") || (trimmedUrl.includes(".") && !trimmedUrl.includes(" "))) {
+    return `${STRAPI_URL}${trimmedUrl.startsWith("/") ? trimmedUrl : `/${trimmedUrl}`}`;
+  }
+  return "";
 }
 
 /**
@@ -64,6 +149,7 @@ export function getStrapiMediaUrl(media?: any): string {
  */
 async function fetchStrapi<T>(endpoint: string, tags: string[] = []): Promise<T | null> {
   const url = getStrapiURL(`/api/${endpoint}`);
+  const isDev = process.env.NODE_ENV === "development";
 
   try {
     const res = await fetch(url, {
@@ -74,7 +160,9 @@ async function fetchStrapi<T>(endpoint: string, tags: string[] = []): Promise<T 
           ? { Authorization: `Bearer ${process.env.STRAPI_API_TOKEN}` }
           : {}),
       },
-      cache: "no-store",
+      ...(isDev
+        ? { cache: "no-store" as RequestCache }
+        : { next: { revalidate: 60, tags } }),
     });
 
     if (!res.ok) {

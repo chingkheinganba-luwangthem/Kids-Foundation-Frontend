@@ -1,6 +1,5 @@
 import React from "react";
 import type { Metadata } from "next";
-import { GALLERY_PAGE_DATA } from "@/data/galleryPage";
 import { getGalleryPageData, getStrapiMediaUrl } from "@/lib/strapi";
 import { GalleryClient } from "@/components/gallery/GalleryClient";
 
@@ -14,41 +13,29 @@ export default async function GalleryPage() {
   const strapiData = await getGalleryPageData();
 
   const banner = {
-    title: strapiData?.bannerTitle || GALLERY_PAGE_DATA.banner.title,
-    breadcrumb: strapiData?.breadcrumb || GALLERY_PAGE_DATA.banner.breadcrumb,
+    title: strapiData?.bannerTitle ?? "",
+    breadcrumb: strapiData?.breadcrumb ?? [],
   };
 
   const sectionHeader = {
-    label: strapiData?.sectionLabel || "MOMENTS & MEMORIES",
-    heading: strapiData?.sectionHeading || "Life at Kids' Foundation",
-    description:
-      strapiData?.sectionDescription ||
-      "A glimpse into the moments, experiences and achievements that make school life memorable.",
+    label: strapiData?.sectionLabel ?? "",
+    heading: strapiData?.sectionHeading ?? "",
+    description: strapiData?.sectionDescription ?? "",
   };
 
   const categories =
-    strapiData?.categories && strapiData.categories.length > 0
-      ? strapiData.categories
-      : GALLERY_PAGE_DATA.categories;
+    strapiData?.categories ?? [];
 
   const images =
-    strapiData?.images && strapiData.images.length > 0
-      ? strapiData.images.map((img, idx) => ({
+    strapiData?.images
+      ?.map((img, idx) => ({
           id: img.id || `gal-${idx}`,
-          src:
-            getStrapiMediaUrl(img.image) ||
-            img.imageUrl ||
-            GALLERY_PAGE_DATA.images[idx]?.src ||
-            "/images/gallery-science-lab.jpg",
-          alt:
-            img.alt ||
-            GALLERY_PAGE_DATA.images[idx]?.alt ||
-            img.title ||
-            "Gallery photo",
-          category: img.category || GALLERY_PAGE_DATA.images[idx]?.category || "Campus",
-          title: img.title || GALLERY_PAGE_DATA.images[idx]?.title || "Life at Kids' Foundation",
+          src: getStrapiMediaUrl(img.image) || img.imageUrl || "",
+          alt: img.alt || img.title,
+          category: img.category,
+          title: img.title,
         }))
-      : GALLERY_PAGE_DATA.images;
+      .filter((image) => Boolean(image.src)) ?? [];
 
   return (
     <GalleryClient

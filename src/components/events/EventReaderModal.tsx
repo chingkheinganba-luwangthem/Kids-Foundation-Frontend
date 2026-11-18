@@ -11,6 +11,7 @@ import {
   Share2,
   ArrowLeft,
 } from "lucide-react";
+import { getSafeImageUrl } from "@/lib/strapi";
 
 export interface EventModalItem {
   id: string;
@@ -144,7 +145,7 @@ export function EventReaderModal({ event, onClose }: EventReaderModalProps) {
           {/* Event Image */}
           <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden shadow-md bg-slate-100">
             <Image
-              src={event.image}
+              src={getSafeImageUrl(event.image, "/images/campus-aerial.jpg")}
               alt={event.imageAlt || event.title}
               fill
               sizes="(max-width: 768px) 100vw, 800px"

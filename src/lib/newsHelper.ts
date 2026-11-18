@@ -1,5 +1,5 @@
 import { NewsItemData } from "@/types/strapi";
-import { NewsUpdateItem } from "@/data/newsUpdatesData";
+import { NewsUpdateItem } from "@/types";
 import { getStrapiMediaUrl } from "@/lib/strapi";
 
 /**
@@ -19,7 +19,7 @@ export function parseNoticeDate(dateStr?: string, fallbackIndex = 0): number {
   }
 
   // 2. Try DD/MM/YYYY or DD/MM/YY (e.g., "25/10/26", "25/10/2026", "25-10-2026")
-  const dmyMatch = trimmed.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+  const dmyMatch = trimmed.match(/^(\d{1,2})[\/\-.]+(\d{1,2})[\/\-.]+(\d{2,4})$/);
   if (dmyMatch) {
     const day = parseInt(dmyMatch[1], 10);
     const month = parseInt(dmyMatch[2], 10) - 1;

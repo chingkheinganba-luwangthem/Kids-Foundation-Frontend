@@ -2,7 +2,6 @@ import React from "react";
 import type { Metadata } from "next";
 import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
-import { LEARNING_PAGE_DATA } from "@/data/learningPage";
 import { getLearningPageData, getStrapiMediaUrl } from "@/lib/strapi";
 
 export const metadata: Metadata = {
@@ -15,34 +14,29 @@ export default async function LearningPage() {
   const strapiData = await getLearningPageData();
 
   const banner = {
-    title: strapiData?.pageTitle || LEARNING_PAGE_DATA.banner.title,
-    breadcrumb: strapiData?.breadcrumb || LEARNING_PAGE_DATA.banner.breadcrumb,
+    title: strapiData?.pageTitle ?? "",
+    breadcrumb: strapiData?.breadcrumb ?? [],
   };
 
-  const introLabel = strapiData?.introLabel || "OUR APPROACH";
-  const introHeading =
-    strapiData?.introHeading || "Building the right foundation through learning";
-  const intro = strapiData?.introText || LEARNING_PAGE_DATA.intro;
+  const introLabel = strapiData?.introLabel ?? "";
+  const introHeading = strapiData?.introHeading ?? "";
+  const intro = strapiData?.introText ?? "";
 
   const stages =
-    strapiData?.stages && strapiData.stages.length > 0
-      ? strapiData.stages.map((st, idx) => {
-          const fallbackStage = LEARNING_PAGE_DATA.stages[idx] || LEARNING_PAGE_DATA.stages[0];
+    strapiData?.stages
+      ?.map((st, idx) => {
           return {
-            id: st.stageId || fallbackStage.id,
-            title: st.title || fallbackStage.title,
-            boldIntro: st.boldIntro || fallbackStage.boldIntro,
-            description:
-              st.description && st.description.length > 0
-                ? st.description
-                : fallbackStage.description,
-            activities: st.activities || fallbackStage.activities,
-            bottomText: st.bottomText || fallbackStage.bottomText,
-            image: getStrapiMediaUrl(st.image) || fallbackStage.image,
-            imageAlt: st.imageAlt || fallbackStage.imageAlt,
+            id: st.stageId || `stage-${idx}`,
+            title: st.title,
+            boldIntro: st.boldIntro,
+            description: st.description ?? [],
+            activities: st.activities ?? [],
+            bottomText: st.bottomText,
+            image: getStrapiMediaUrl(st.image),
+            imageAlt: st.imageAlt || st.title,
           };
         })
-      : LEARNING_PAGE_DATA.stages;
+      .filter((stage) => Boolean(stage.image)) ?? [];
 
   return (
     <div className="relative flex-1 flex flex-col bg-white overflow-x-hidden selection:bg-[#F47C61] selection:text-white">

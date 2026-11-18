@@ -1,4 +1,4 @@
-import { NewsUpdateItem } from "@/data/newsUpdatesData";
+import { NewsUpdateItem } from "@/types";
 
 export function downloadNoticeDocument(item: NewsUpdateItem) {
   if (item.documentUrl) {

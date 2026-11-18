@@ -4,6 +4,7 @@ import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import { PageBanner } from "@/components/ui/PageBanner";
 import { ImageLightbox } from "@/components/ui/ImageLightbox";
+import { normalizeStringArray } from "@/lib/strapi";
 
 export interface GalleryClientProps {
   banner: {
@@ -35,6 +36,12 @@ export function GalleryClient({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIndex, setLightboxIndex] = useState(0);
 
+  const safeCategories = normalizeStringArray(categories);
+  const finalCategories =
+    safeCategories.length > 0
+      ? safeCategories
+      : ["All", "Campus", "Activities", "Sports", "Arts", "Celebrations"];
+
   const filteredImages = useMemo(() => {
     if (activeCategory === "All") return images;
     return images.filter((img) => img.category === activeCategory);
@@ -48,7 +55,10 @@ export function GalleryClient({
   return (
     <div className="relative flex-1 flex flex-col bg-white overflow-x-hidden selection:bg-[#F47C61] selection:text-white">
       <main className="flex-1 flex flex-col">
-        <PageBanner title={banner.title} breadcrumb={banner.breadcrumb} />
+        <PageBanner
+          title={banner.title}
+          breadcrumb={normalizeStringArray(banner.breadcrumb)}
+        />
 
         <section className="py-12 sm:py-16 lg:py-20 bg-white">
           <div className="max-w-[1400px] mx-auto px-4 sm:px-6 md:px-8 lg:px-[100px]">
@@ -67,7 +77,7 @@ export function GalleryClient({
 
             {/* Category Filter */}
             <div className="flex flex-wrap items-center justify-center gap-2.5 mb-10">
-              {categories.map((cat) => (
+              {finalCategories.map((cat) => (
                 <button
                   key={cat}
                   type="button"

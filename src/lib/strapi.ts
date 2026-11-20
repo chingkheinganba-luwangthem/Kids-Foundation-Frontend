@@ -151,9 +151,13 @@ async function fetchStrapi<T>(endpoint: string, tags: string[] = []): Promise<T 
   const url = getStrapiURL(`/api/${endpoint}`);
   const isDev = process.env.NODE_ENV === "development";
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
   try {
     const res = await fetch(url, {
       method: "GET",
+      signal: controller.signal,
       headers: {
         "Content-Type": "application/json",
         ...(process.env.STRAPI_API_TOKEN
@@ -164,6 +168,8 @@ async function fetchStrapi<T>(endpoint: string, tags: string[] = []): Promise<T 
         ? { cache: "no-store" as RequestCache }
         : { next: { revalidate: 60, tags } }),
     });
+
+    clearTimeout(timeoutId);
 
     if (!res.ok) {
       console.warn(`[fetchStrapi] Non-OK response (${res.status} ${res.statusText}) for: ${url}`);
@@ -186,7 +192,12 @@ async function fetchStrapi<T>(endpoint: string, tags: string[] = []): Promise<T 
     }
 
     return json.data as T;
-  } catch (err) {
+  } catch (err: any) {
+    clearTimeout(timeoutId);
+    // Ignore Next.js internal prerender completion cancellations to prevent log noise
+    if (err?.digest === "HANGING_PROMISE_REJECTION" || err?.name === "AbortError") {
+      return null;
+    }
     // Strapi server unreachable in local dev or network failure: fail silently to local fallback
     console.warn(`[fetchStrapi] Network error for: ${url}`, err);
     return null;
@@ -218,14 +229,7 @@ export async function getFooterData(): Promise<FooterData | null> {
  * Fetch Home Page Singleton Data (Hero, Excellence Banner)
  */
 export async function getHomePageData(): Promise<HomePageData | null> {
-  const query = [
-    "populate[hero][populate][slides][populate]=*",
-    "populate[hero][populate][primaryCta]=*",
-    "populate[hero][populate][secondaryCta]=*",
-    "populate[excellenceBanner]=*",
-  ].join("&");
-
-  return fetchStrapi<HomePageData>(`home-page?${query}`, ["home-page"]);
+  return fetchStrapi<HomePageData>("home-page?populate=*", ["home-page"]);
 }
 
 /**
@@ -297,80 +301,70 @@ export async function getAboutPageData(): Promise<AboutPageData | null> {
  * Fetch Learning Page Singleton Data (Approach Intro, Stages & Activities)
  */
 export async function getLearningPageData(): Promise<LearningPageData | null> {
-  const query = "populate[stages][populate]=*";
-  return fetchStrapi<LearningPageData>(`learning-page?${query}`, ["learning-page"]);
+  return fetchStrapi<LearningPageData>("learning-page?populate=*", ["learning-page"]);
 }
 
 /**
  * Fetch Campus Page Singleton Data (Intro, Facilities, Gallery, Virtual Tour)
  */
 export async function getCampusPageData(): Promise<CampusPageData | null> {
-  const query = "populate[galleryImages][populate]=*";
-  return fetchStrapi<CampusPageData>(`campus-page?${query}`, ["campus-page"]);
+  return fetchStrapi<CampusPageData>("campus-page?populate=*", ["campus-page"]);
 }
 
 /**
  * Fetch Sports & Arts Page Singleton Data (Activities, Facilities Callout, Gallery)
  */
 export async function getSportsArtsPageData(): Promise<SportsArtsPageData | null> {
-  const query = "populate[activities]=true&populate[gallery][populate]=*";
-  return fetchStrapi<SportsArtsPageData>(`sports-and-arts-page?${query}`, ["sports-and-arts-page"]);
+  return fetchStrapi<SportsArtsPageData>("sports-and-arts-page?populate=*", ["sports-and-arts-page"]);
 }
 
 /**
  * Fetch Gallery Page Singleton Data (Banner, Section Header, Categories, Photos)
  */
 export async function getGalleryPageData(): Promise<GalleryPageData | null> {
-  const query = "populate[images][populate]=*";
-  return fetchStrapi<GalleryPageData>(`gallery-page?${query}`, ["gallery-page"]);
+  return fetchStrapi<GalleryPageData>("gallery-page?populate=*", ["gallery-page"]);
 }
 
 /**
  * Fetch Admission Page Singleton Data (Enquiry, Procedures, Fee Structure Tables)
  */
 export async function getAdmissionPageData(): Promise<AdmissionPageData | null> {
-  const query = "populate[enquiry]=true&populate[procedures]=true&populate[feeStructure][populate]=*";
-  return fetchStrapi<AdmissionPageData>(`admission-page?${query}`, ["admission-page"]);
+  return fetchStrapi<AdmissionPageData>("admission-page?populate=*", ["admission-page"]);
 }
 
 /**
  * Fetch Events Page Singleton Data (Banner, Filters, Event Cards)
  */
 export async function getEventsPageData(): Promise<EventsPageData | null> {
-  const query = "populate[events][populate]=*";
-  return fetchStrapi<EventsPageData>(`events-page?${query}`, ["events-page"]);
+  return fetchStrapi<EventsPageData>("events-page?populate=*", ["events-page"]);
 }
 
 /**
  * Fetch News and Updates Page Singleton Data (Banner, Categories, Notices)
  */
 export async function getNewsPageData(): Promise<NewsPageData | null> {
-  const query = "populate[articles][populate]=*";
-  return fetchStrapi<NewsPageData>(`news-page?${query}`, ["news-page"]);
+  return fetchStrapi<NewsPageData>("news-page?populate=*", ["news-page"]);
 }
 
 /**
  * Fetch Publications Page Singleton Data (Banner, Categories, Handbooks, Magazines)
  */
 export async function getPublicationsPageData(): Promise<PublicationsPageData | null> {
-  const query = "populate[publications][populate]=*";
-  return fetchStrapi<PublicationsPageData>(`publications-page?${query}`, ["publications-page"]);
+  return fetchStrapi<PublicationsPageData>("publications-page?populate=*", ["publications-page"]);
 }
 
 /**
   * Fetch Clubs & Activities Page Singleton Data (Banner, Categories, Clubs List)
   */
 export async function getClubsPageData(): Promise<ClubsPageData | null> {
-  const query = "populate[clubs][populate]=*";
-  return fetchStrapi<ClubsPageData>(`clubs-page?${query}`, ["clubs-page"]);
+  return fetchStrapi<ClubsPageData>("clubs-page?populate=*", ["clubs-page"]);
 }
 
 /**
   * Fetch Contact Page Singleton Data (Banner, Contact Items, Form info, Map)
   */
 export async function getContactPageData(): Promise<ContactPageData | null> {
-  const query = "populate[contactItems]=true";
-  return fetchStrapi<ContactPageData>(`contact-page?${query}`, ["contact-page"]);
+  return fetchStrapi<ContactPageData>("contact-page?populate=*", ["contact-page"]);
 }
 
 
